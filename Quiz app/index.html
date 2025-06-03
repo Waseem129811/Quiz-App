@@ -10,7 +10,6 @@
         body {
             font-family: 'Inter', sans-serif;
         }
-        /* Custom Keyframe Animations for a smoother feel */
         @keyframes fadeInDown {
             from {
                 opacity: 0;
@@ -57,7 +56,6 @@
 
     <script>
         // Quiz questions data (simulating data from a Python backend)
-        // In a real scenario, this would be fetched from an API endpoint.
         const quizQuestions = [
             {
                 question: "What is the capital of France?",
@@ -96,9 +94,7 @@
 
         const quizContainer = document.getElementById('quiz-container');
 
-        /**
-         * Renders the start screen of the quiz.
-         */
+        /* Renders the start screen of the quiz.*/
         function renderStartScreen() {
             quizContainer.innerHTML = `
                 <div class="space-y-6">
@@ -117,9 +113,7 @@
             document.getElementById('start-quiz-btn').addEventListener('click', startQuiz);
         }
 
-        /**
-         * Initializes and starts the quiz.
-         */
+        /* Initializes and starts the quiz.*/
         function startQuiz() {
             currentQuestionIndex = 0;
             score = 0;
@@ -130,9 +124,7 @@
             renderQuestion();
         }
 
-        /**
-         * Renders the current quiz question and its options.
-         */
+        /*Renders the current quiz question and its options.*/
         function renderQuestion() {
             if (quizFinished) {
                 renderResultScreen();
@@ -198,10 +190,7 @@
             });
         }
 
-        /**
-         * Handles the user's answer selection.
-         * @param {string} answer - The selected answer string.
-         */
+        /* Handles the selection of an answer and provides feedback. */
         function handleAnswerSelection(answer) {
             if (selectedAnswer !== null) { // Prevent multiple selections
                 return;
@@ -225,12 +214,10 @@
             // Move to the next question after a delay
             setTimeout(() => {
                 moveToNextQuestion();
-            }, 1500); // 1.5 seconds delay
+            }, 1500);
         }
 
-        /**
-         * Moves to the next question or finishes the quiz.
-         */
+        /* Moves to the next question or finishes the quiz.*/
         function moveToNextQuestion() {
             showFeedback = false;
             selectedAnswer = null;
@@ -245,9 +232,7 @@
             }
         }
 
-        /**
-         * Renders the quiz result screen.
-         */
+        /* Renders the quiz result screen.*/
         function renderResultScreen() {
             quizContainer.innerHTML = `
                 <div class="space-y-6 animate-fade-in">
