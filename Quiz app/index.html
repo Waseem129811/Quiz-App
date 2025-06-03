@@ -1,0 +1,272 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Quiz Master Game</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+        /* Custom Keyframe Animations for a smoother feel */
+        @keyframes fadeInDown {
+            from {
+                opacity: 0;
+                transform: translateY(-20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+            }
+            to {
+                opacity: 1;
+            }
+        }
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        .animate-fade-in-down {
+            animation: fadeInDown 0.6s ease-out forwards;
+        }
+        .animate-fade-in {
+            animation: fadeIn 0.6s ease-out forwards;
+        }
+        .animate-fade-in-up {
+            animation: fadeInUp 0.6s ease-out forwards;
+        }
+    </style>
+</head>
+<body class="min-h-screen bg-gradient-to-br from-purple-800 to-indigo-900 flex items-center justify-center p-4">
+
+    <div id="quiz-container" class="bg-white p-8 rounded-2xl shadow-2xl w-full max-w-md text-center transform transition-all duration-300 hover:scale-105">
+        </div>
+
+    <script>
+        // Quiz questions data (simulating data from a Python backend)
+        // In a real scenario, this would be fetched from an API endpoint.
+        const quizQuestions = [
+            {
+                question: "What is the capital of France?",
+                options: ["Berlin", "Madrid", "Paris", "Rome"],
+                correctAnswer: "Paris",
+            },
+            {
+                question: "Which planet is known as the Red Planet?",
+                options: ["Earth", "Mars", "Jupiter", "Venus"],
+                correctAnswer: "Mars",
+            },
+            {
+                question: "What is the largest ocean on Earth?",
+                options: ["Atlantic Ocean", "Indian Ocean", "Arctic Ocean", "Pacific Ocean"],
+                correctAnswer: "Pacific Ocean",
+            },
+            {
+                question: "Who painted the Mona Lisa?",
+                options: ["Vincent van Gogh", "Pablo Picasso", "Leonardo da Vinci", "Claude Monet"],
+                correctAnswer: "Leonardo da Vinci",
+            },
+            {
+                question: "What is the chemical symbol for water?",
+                options: ["O2", "H2O", "CO2", "NaCl"],
+                correctAnswer: "H2O",
+            },
+        ];
+
+        // Global state variables for the quiz
+        let currentQuestionIndex = 0;
+        let score = 0;
+        let selectedAnswer = null;
+        let quizFinished = false;
+        let showFeedback = false;
+        let correctAnswerIndex = null;
+
+        const quizContainer = document.getElementById('quiz-container');
+
+        /**
+         * Renders the start screen of the quiz.
+         */
+        function renderStartScreen() {
+            quizContainer.innerHTML = `
+                <div class="space-y-6">
+                    <h1 class="text-4xl font-extrabold text-gray-900 mb-4 animate-fade-in-down">
+                        🧠 Quiz Master 🎮
+                    </h1>
+                    <p class="text-lg text-gray-700 mb-8">
+                        Test your knowledge and become a quiz champion!
+                    </p>
+                    <button id="start-quiz-btn"
+                        class="w-full bg-gradient-to-r from-green-500 to-teal-600 text-white font-bold py-3 px-6 rounded-xl shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-300 focus:outline-none focus:ring-4 focus:ring-green-300">
+                        Start Quiz
+                    </button>
+                </div>
+            `;
+            document.getElementById('start-quiz-btn').addEventListener('click', startQuiz);
+        }
+
+        /**
+         * Initializes and starts the quiz.
+         */
+        function startQuiz() {
+            currentQuestionIndex = 0;
+            score = 0;
+            selectedAnswer = null;
+            quizFinished = false;
+            showFeedback = false;
+            correctAnswerIndex = null;
+            renderQuestion();
+        }
+
+        /**
+         * Renders the current quiz question and its options.
+         */
+        function renderQuestion() {
+            if (quizFinished) {
+                renderResultScreen();
+                return;
+            }
+
+            const currentQuestion = quizQuestions[currentQuestionIndex];
+            let optionsHtml = '';
+            currentQuestion.options.forEach((option, index) => {
+                let buttonClasses = `
+                    w-full py-3 px-4 rounded-xl text-lg font-medium transition-all duration-300
+                    bg-gray-200 text-gray-800 hover:bg-purple-100
+                `;
+
+                if (selectedAnswer !== null) {
+                    // If an answer has been selected, disable buttons
+                    buttonClasses += ' opacity-60 cursor-not-allowed';
+                    if (selectedAnswer === option) {
+                        // Highlight selected answer
+                        if (option === currentQuestion.correctAnswer) {
+                            buttonClasses = `w-full py-3 px-4 rounded-xl text-lg font-medium transition-all duration-300 bg-green-500 text-white shadow-md`;
+                        } else {
+                            buttonClasses = `w-full py-3 px-4 rounded-xl text-lg font-medium transition-all duration-300 bg-red-500 text-white shadow-md`;
+                        }
+                    } else if (index === correctAnswerIndex) {
+                        // Highlight correct answer if it's not the selected one
+                        buttonClasses = `w-full py-3 px-4 rounded-xl text-lg font-medium transition-all duration-300 bg-green-500 text-white shadow-md`;
+                    }
+                }
+
+                optionsHtml += `
+                    <button class="${buttonClasses}" data-option="${option}" ${selectedAnswer !== null ? 'disabled' : ''}>
+                        ${option}
+                    </button>
+                `;
+            });
+
+            let feedbackHtml = '';
+            if (showFeedback) {
+                const feedbackText = selectedAnswer === currentQuestion.correctAnswer ? 'Correct! 🎉' : 'Incorrect. 😔';
+                const feedbackColor = selectedAnswer === currentQuestion.correctAnswer ? 'text-green-700' : 'text-red-700';
+                feedbackHtml = `<p class="mt-4 text-xl font-semibold animate-fade-in-up ${feedbackColor}">${feedbackText}</p>`;
+            }
+
+            quizContainer.innerHTML = `
+                <div class="space-y-6 animate-fade-in">
+                    <p class="text-sm font-semibold text-gray-600 mb-2">
+                        Question ${currentQuestionIndex + 1} of ${quizQuestions.length}
+                    </p>
+                    <h2 class="text-2xl font-bold text-gray-800 mb-6">
+                        ${currentQuestion.question}
+                    </h2>
+                    <div id="options-container" class="grid grid-cols-1 gap-4">
+                        ${optionsHtml}
+                    </div>
+                    ${feedbackHtml}
+                </div>
+            `;
+
+            // Add event listeners to options buttons
+            document.querySelectorAll('#options-container button').forEach(button => {
+                button.addEventListener('click', (event) => handleAnswerSelection(event.target.dataset.option));
+            });
+        }
+
+        /**
+         * Handles the user's answer selection.
+         * @param {string} answer - The selected answer string.
+         */
+        function handleAnswerSelection(answer) {
+            if (selectedAnswer !== null) { // Prevent multiple selections
+                return;
+            }
+
+            selectedAnswer = answer;
+            showFeedback = true;
+
+            const currentQuestion = quizQuestions[currentQuestionIndex];
+            const correct = answer === currentQuestion.correctAnswer;
+
+            if (correct) {
+                score++;
+            }
+
+            // Find the index of the correct answer for visual feedback
+            correctAnswerIndex = currentQuestion.options.indexOf(currentQuestion.correctAnswer);
+
+            renderQuestion(); // Re-render to show feedback and disable buttons
+
+            // Move to the next question after a delay
+            setTimeout(() => {
+                moveToNextQuestion();
+            }, 1500); // 1.5 seconds delay
+        }
+
+        /**
+         * Moves to the next question or finishes the quiz.
+         */
+        function moveToNextQuestion() {
+            showFeedback = false;
+            selectedAnswer = null;
+            correctAnswerIndex = null;
+
+            if (currentQuestionIndex < quizQuestions.length - 1) {
+                currentQuestionIndex++;
+                renderQuestion();
+            } else {
+                quizFinished = true;
+                renderResultScreen();
+            }
+        }
+
+        /**
+         * Renders the quiz result screen.
+         */
+        function renderResultScreen() {
+            quizContainer.innerHTML = `
+                <div class="space-y-6 animate-fade-in">
+                    <h2 class="text-4xl font-extrabold text-gray-900 mb-4">Quiz Finished! 🎉</h2>
+                    <p class="text-2xl text-gray-700 mb-8">
+                        You scored <span class="font-bold text-purple-700">${score}</span> out of
+                        <span class="font-bold text-purple-700">${quizQuestions.length}</span>!
+                    </p>
+                    <button id="restart-quiz-btn"
+                        class="w-full bg-gradient-to-r from-blue-500 to-indigo-600 text-white font-bold py-3 px-6 rounded-xl shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-300 focus:outline-none focus:ring-4 focus:ring-blue-300">
+                        Play Again
+                    </button>
+                </div>
+            `;
+            document.getElementById('restart-quiz-btn').addEventListener('click', startQuiz);
+        }
+
+        // Initial render when the page loads
+        document.addEventListener('DOMContentLoaded', renderStartScreen);
+    </script>
+</body>
+</html>
